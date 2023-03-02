@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Button, Input, useTheme } from 'react-daisyui'
 import style from "@/styles/Home.module.css"
-import Image from 'next/image'
 import AnimeRenderer from '@/components/anime-render'
+import AnimeListItem from '@/components/anime-list-item'
 
 
 class ListManager {
@@ -85,25 +85,29 @@ export default function Home() {
 
   }
 
-  if(left && right) console.log(left.media.title.english,right.media.title.english)
   return (
     <>
     <Head>
       <title>Anime Ranker</title>
     </Head>
     <div className={style.container}>
-      {left == undefined && right ==undefined ? 
-        <div>
-          <Input placeholder='AniList Username' size='lg' className={style.userNameInput} onChange={(val) => {setUser(val.target.value)}}/>
-          <Button color='primary' dataTheme='dark' onClick={onUsernameEntered}>Get Ani List</Button>
-        </div> :
-        <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-evenly', width: '100vw'}}>
-          <AnimeRenderer media={left.media} onClick={onLeftPress}/>
-          <AnimeRenderer media={right.media} onClick={onRightPress}/>
-        </div>
-      }
-
-
+      <div style={{overflowY:"scroll", maxHeight:"100vh"}}>
+        { list &&
+        list.list.map((anime, idx)=><AnimeListItem media={anime.media} index={list.list.length - idx}/>).reverse()
+        }
+      </div>
+      <div className={style.container}>
+        {left == undefined && right ==undefined ? 
+          <div>
+            <Input placeholder='AniList Username' size='lg' className={style.userNameInput} onChange={(val) => {setUser(val.target.value)}}/>
+            <Button color='primary' dataTheme='dark' onClick={onUsernameEntered}>Get Ani List</Button>
+          </div> :
+          <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-evenly', width: '80vw'}}>
+            <AnimeRenderer media={left.media} onClick={onLeftPress}/>
+            <AnimeRenderer media={right.media} onClick={onRightPress}/>
+          </div>
+        }
+      </div>
     </div>
     </>
 
