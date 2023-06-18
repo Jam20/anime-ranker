@@ -1,5 +1,4 @@
 import React from 'react'
-import { Button, Input, useTheme } from 'react-daisyui'
 
 export default function AnimeListItem(props){
 

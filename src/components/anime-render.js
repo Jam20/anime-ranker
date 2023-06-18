@@ -1,5 +1,5 @@
 import React from 'react'
-import { Button, Input, useTheme } from 'react-daisyui'
+import { Button } from 'react-daisyui'
 
 export default function AnimeRenderer(props){
 

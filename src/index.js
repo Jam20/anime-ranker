@@ -5,39 +5,10 @@ import axios from 'axios'
 import { Button, Input, useTheme } from 'react-daisyui'
 import style from "./styles/Home.module.css"
 import globalStyle from './styles/globals.css'
+import { getAnimeListManager } from './data-access/anilist';
 import AnimeRenderer from './components/anime-render'
 import AnimeListItem from './components/anime-list-item'
 
-
-class ListManager {
-  constructor(aniList){
-    this.initialList = aniList
-    this.list = [aniList[0]]
-    this.currentIndex = 1
-    this.low = 0
-    this.high = this.list.length - 1
-  }
-
-
-  getNextComparison() {
-    const mid = Math.floor((this.low + this.high)/2)
-    return [this.list[mid],this.initialList[this.currentIndex]]
-  }
-
-  resolveComparision(item){
-    const mid = Math.floor((this.low + this.high)/2)
-    if(mid == this.low){
-      if(item == this.list[mid]) this.list.splice(mid, 0, this.initialList[this.currentIndex])
-      else if(mid == this.list.length - 1) this.list.push(this.initialList[this.currentIndex])
-      else this.list.splice(mid+1, 0, this.initialList[this.currentIndex])
-      this.currentIndex = this.currentIndex + 1
-      this.low = 0
-      this.high = this.list.length - 1
-    }
-    else if(item == this.list[mid]) this.high = mid-1
-    else this.low = mid+1
-  }
-}
 
 export default function Home() {
   const [user, setUser] = useState(undefined)
@@ -46,52 +17,21 @@ export default function Home() {
   const [right, setRight] = useState(undefined)
 
   const onUsernameEntered = async () => {
-    const newList = (await axios.post('https://graphql.anilist.co/', {query : `
-    {
-      MediaListCollection(userName: "${user}",type: ANIME, status_in: COMPLETED) {
-        lists {
-          entries {
-            media{
-              id
-              title {
-                english
-                userPreferred
-              }
-              coverImage{
-                extraLarge
-              }
-            }
-          }
-        }
-      }
-    }
-    `})).data.data.MediaListCollection.lists[0].entries
-    setList(new ListManager(newList))
-    setLeft(newList[0])
-    setRight(newList[1])
+    const newList = await getAnimeListManager(user)
+    setList(newList)
+    setLeft(newList.initialList[0])
+    setRight(newList.initialList[1])
   }
 
-  const onLeftPress = () => {
-    list.resolveComparision(left)
+  const onSelection = (selection) => () => {
+    list.resolveComparision(selection)
     const [newLeft, newRight] = list.getNextComparison()
     setLeft(newLeft)
     setRight(newRight)
     console.log(list.list)
   }
-  const onRightPress = () => {
-    list.resolveComparision(right)
-    const [newLeft, newRight] = list.getNextComparison()
-    setLeft(newLeft)
-    setRight(newRight)
-    console.log(list.list)
 
-  }
-  
   return (
-    <>
-    <head>
-      <title>Anime Ranker</title>
-    </head>
     <div className={style.container}>
       <div style={{overflowY:"scroll", maxHeight:"100vh"}}>
         { list &&
@@ -105,14 +45,12 @@ export default function Home() {
             <Button color='primary' dataTheme='dark' onClick={onUsernameEntered}>Get Ani List</Button>
           </div> :
           <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-evenly', width: '80vw'}}>
-            <AnimeRenderer media={left.media} onClick={onLeftPress}/>
-            <AnimeRenderer media={right.media} onClick={onRightPress}/>
+            <AnimeRenderer media={left.media} onClick={onSelection(left)}/>
+            <AnimeRenderer media={right.media} onClick={onSelection(right)}/>
           </div>
         }
       </div>
     </div>
-    </>
-
   )
 }
 
