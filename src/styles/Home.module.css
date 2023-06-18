@@ -1,4 +1,4 @@
-.animeContainer{
+.animeContainer {
   display: flex;
   flex-direction: column;
 }
@@ -12,7 +12,27 @@
   overflow: hidden;
   margin: 0
 }
+
 .userNameInput {
   margin: 2vh;
- align-self: center;
+  align-self: center;
+}
+
+.animeLeftHeader {
+  width: 80vw;
+  justify-content: center;
+  display: flex;
+}
+
+.exportListButton {
+  text-align: center;
+  width: 12vw;
+  margin-bottom: 4vh;
+  justify-self: center;
+}
+
+.loginPage {
+  display: flex;
+  flex-direction: column;
+  
 }
