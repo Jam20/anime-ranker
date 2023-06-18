@@ -1,10 +1,12 @@
-import Head from 'next/head'
+import React from 'react';
+import ReactDOM from 'react-dom';
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Button, Input, useTheme } from 'react-daisyui'
-import style from "@/styles/Home.module.css"
-import AnimeRenderer from '@/components/anime-render'
-import AnimeListItem from '@/components/anime-list-item'
+import style from "./styles/Home.module.css"
+import globalStyle from './styles/globals.css'
+import AnimeRenderer from './components/anime-render'
+import AnimeListItem from './components/anime-list-item'
 
 
 class ListManager {
@@ -84,12 +86,12 @@ export default function Home() {
     console.log(list.list)
 
   }
-
+  
   return (
     <>
-    <Head>
+    <head>
       <title>Anime Ranker</title>
-    </Head>
+    </head>
     <div className={style.container}>
       <div style={{overflowY:"scroll", maxHeight:"100vh"}}>
         { list &&
@@ -97,7 +99,7 @@ export default function Home() {
         }
       </div>
       <div className={style.container}>
-        {left == undefined && right ==undefined ? 
+        {left == undefined || right == undefined ? 
           <div>
             <Input placeholder='AniList Username' size='lg' className={style.userNameInput} onChange={(val) => {setUser(val.target.value)}}/>
             <Button color='primary' dataTheme='dark' onClick={onUsernameEntered}>Get Ani List</Button>
@@ -114,3 +116,7 @@ export default function Home() {
   )
 }
 
+ReactDOM.render(
+  <Home/>,
+document.getElementById('root')
+);
