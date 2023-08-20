@@ -8,7 +8,6 @@
 import Foundation
 import Html
 
-var userStorage = UserStorage()
 
 private let mainDivStyle: StaticString = """
   display: flex;
@@ -19,50 +18,48 @@ private let mainDivStyle: StaticString = """
   overflow: hidden;
   margin: 0
 """
-private let headerStyle: StaticString = """
-  width: 80vw;
-  justify-content: center;
-  display: flex;
-"""
 
-private let subDivStyle: StaticString = """
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-    width: 80vw;
-"""
 func rankerScreen(username: String) async throws -> Node {
-    let rankedList = try await getAnimeList(username)
-    let (left, right) = rankedList.getNextComparison()
-    let animeLeftToSort = rankedList.unsortedList.count - rankedList.sortedList.count
+    let rankedList = try await getRankedList(username)
+    var listAsAnime: [Anime] = []
+    for id in rankedList.getList() {
+        listAsAnime.append(await animeStorage.get(id)!)
+    }
+    
+    guard let (left, right) = rankedList.next() else {
+        return Node.div(attributes: [.style(safe: mainDivStyle), .id("ranker-screen")],
+                        animeListView(listAsAnime),
+                        .h1("Done Sorting")
+        )
+    }
+    
+    let leftAnime = await animeStorage.get(left)!
+    let rightAnime = await animeStorage.get(right)!
+    
     return Node.div(attributes: [.style(safe: mainDivStyle), .id("ranker-screen")],
-                    animeListView(rankedList.sortedList.reversed()),
-                    .div(attributes: [.style(safe: "display: inline-grid;")],
-                         .h1(attributes: [.style(safe: headerStyle)],
-                             .text("\(animeLeftToSort) anime left to sort")
-                         ),
-                         .div(attributes: [.style(safe: subDivStyle)],
-                              try animeView(user: username, anime: left),
-                              try animeView(user: username, anime: right)
-                             )
-                    )
+                    animeListView(listAsAnime),
+                    try animeSelectionView(username: username, leftToSort: rankedList.leftToSort, left: leftAnime, right: rightAnime)
     )
 }
 
+
+
 func rankerScreen(username: String, animeId: Int) async throws -> Node {
-    var rankedList = try await getAnimeList(username)
-    rankedList.resolveComparison(animeId)
-    userStorage.set(username: username, animeList: rankedList)
+    var rankedList = try await getRankedList(username)
+    rankedList.resolve(animeId)
+    try await userStorage.set(username: username, value: rankedList)
     return try await rankerScreen(username: username)
 }
 
-private func getAnimeList(_ username: String) async throws -> RankedAnimeList {
-    if let list = userStorage.get(username) {
+private func getRankedList(_ username: String) async throws -> RankedList {
+    if let list = try await userStorage.get(username) {
         return list
     }
     let rawList = try await retrieveAnimeList(username)
-    let rankedList = RankedAnimeList(initial: rawList)
-    userStorage.set(username: username, animeList: rankedList)
+    try await animeStorage.add(rawList)
+    let ids = rawList.map { $0.id }
+    let rankedList = RankedList(ids)
+    try await userStorage.set(username: username, value: rankedList)
     return rankedList
 }
 
